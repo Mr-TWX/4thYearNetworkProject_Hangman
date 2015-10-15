@@ -21,9 +21,10 @@
 
  main ()
  {
- 	int sock, fd, client_len, pid;
+ 	int sock, fd, client_len;
  	struct sockaddr_in server, client;
-	 
+
+ 	srand ((int) time ((long *) 0)); /* randomize the seed */
 
  	sock = socket (AF_INET, SOCK_STREAM, 0);//0 or IPPROTO_TCP
  	if (sock <0) { //This error checking is the code Stevens wraps in his Socket Function etc
@@ -48,19 +49,8 @@
  			perror ("accepting connection");
  			exit (3);
  		}
-		
-		/*Fork Implementation*/
-		if(pid = fork() == 0){
-		  srand ((int) time ((long *) 0)); /* randomize the seed */
-		  close(sock);
-		  play_hangman (fd, fd);
-		}
-		else if (pid > 0){
-		  close(fd);
- 		}
-		else{
+ 		play_hangman (fd, fd);
  		close (fd);
-		}
  	}
  }
 
