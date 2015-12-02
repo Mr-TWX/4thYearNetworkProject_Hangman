@@ -190,14 +190,15 @@ GameNode* GameList_searchGameNodeByUsername(GameList *list, char* username)
     GameNode *result = NULL;
     for(result = list->first; result != NULL; result = result->next)
     {
-        if(strcmp(result->username, username))
+        printf("checking %s against %s\n", result->username, username);
+        if(strcmp(result->username, username) == 0)
             break;
     }
 error:
     return result;
 }
 
-/* UNcomment for testing
+ /*//Uncomment for testing
 int main(int argc, char *argv[])
 {
     GameList* gList = GameList_create();
@@ -212,6 +213,12 @@ int main(int argc, char *argv[])
         printf("fd %d username %s, word %s, lives %d\n", gNode->fd, gNode->username, gNode->correctWord, gNode->numOfLives);
     }
 
+    GameNode* uNode = GameList_searchGameNodeByUsername(gList, "John\0");
+    if(uNode != NULL)
+        printf("username retrieved %s\n", uNode->username);
+    else
+        printf("returned null\n");
+
     return(0);
 }
-*?
+*/
