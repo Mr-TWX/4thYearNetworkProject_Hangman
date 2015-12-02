@@ -22,26 +22,84 @@
  main ()
  {
  	int sock, fd, client_len;
+ 	//master file descriptor list
+ 	fd_set master;
+ 	// temp file descriptor list for select ()
+ 	fd_set read_fds
+
+ 	// maximum file desciptor number
+ 	int fdmax; 
+
+ 	// listening socket descriptor
+ 	int listener;
+
+ 	// newly accepted socket descriptor
+ 	int newfd;
+
+ 	// buffer for client data
+ 	char buffer[1024];
+ 	int nbytes;
+
+ 	// for setsockopt() SO-REUSEADDR, below
+ 	int yes = 1;
+ 	int addrlen;
+ 	int i,j;
+
+ 	// clear the master and temp sets
+ 	FD-ZERO(&master);
+ 	FD_ZERO(&read_fds);
+
+ 	
  	struct sockaddr_in server, client;
 
  	srand ((int) time ((long *) 0)); /* randomize the seed */
-
+	
+ 	/*
+ 	creating the socket 
  	sock = socket (AF_INET, SOCK_STREAM, 0);//0 or IPPROTO_TCP
  	if (sock <0) { //This error checking is the code Stevens wraps in his Socket Function etc
  		perror ("creating stream socket");
  		exit (1);
  	}
+	*/
 
+	//get the listener
+	if((listener = socker (AF_INET, SOCK_STREAM, 0))) == -1)
+ 	{
+ 		perror("Server-socket() error!")
+ 		exit(1)
+ 	}
+ 	printf("Server-socket() is OK...........\n");
+
+ 	// BIND
  	server.sin_family = AF_INET;
  	server.sin_addr.s_addr = htonl(INADDR_ANY);
  	server.sin_port = htons(HANGMAN_TCP_PORT);
+ 	memset(&(serveraddr.sin_zero), '\0', 8);
 
- 	if (bind(sock, (struct sockaddr *) & server, sizeof(server)) <0) {
- 		perror ("binding socket");
+ 	if (bind(listener, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) ==-1) 
+ 	{
+ 		perror ("binding socket error!");
 	 	exit (2);
  	}
+ 	printf("Server-bind() is OK....");
+	
+	// LISTEN 	
+ 	//listen (sock, 5);
+ 	if (listen(listener, 10) == -1)
+ 	{
+ 		perror("Server-listen() error!");
+ 		exit(1);
+ 	}
+ 	printf("Server-listen() is OK....\n");
 
- 	listen (sock, 5);
+ 	// adding the listener to the master set
+ 	FD-SET(listener, &master);
+
+ 	// keep track of the biggest file descriptor
+ 	fdmax = listener;
+
+ 	
 
  	while (1) {
  		client_len = sizeof (client);
@@ -50,6 +108,8 @@
  			exit (3);
  		}
  		play_hangman (fd, fd);
+ 		// cant just close? 
+
  		close (fd);
  	}
  }
