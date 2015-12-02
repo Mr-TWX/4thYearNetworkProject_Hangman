@@ -1,4 +1,0 @@
-/*
-Doubly Linked List Structure
-*/
-

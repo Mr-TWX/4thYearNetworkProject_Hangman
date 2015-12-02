@@ -1,4 +1,5 @@
 #include "GameList.h"
+#include <string.h>
 
 //return pointer to new node in memory
 GameNode *GameNode_create()
@@ -155,8 +156,26 @@ error:
 // return null if no matching GameNode is found
 GameNode* GameList_searchGameNodeByFd(GameList *list, int fd)
 {
-    
+    GameNode *result = NULL;
+    for(result = list->first; result != NULL; result = result->next)
+    {
+        if(result->fd == fd)
+            break;
+    }
+
+error:
+    return result;
 }
 // search for a GameNode by looking at username
 // return NULL if no matching GameNOde is found
-GameNode* GameList_searchGameNodeByUsername(GameList *list, char* username);
+GameNode* GameList_searchGameNodeByUsername(GameList *list, char* username)
+{
+    GameNode *result = NULL;
+    for(result = list->first; result != NULL; result = result->next)
+    {
+        if(strcmp(result->username, username))
+            break;
+    }
+error:
+    return result;
+}
