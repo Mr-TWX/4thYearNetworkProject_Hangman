@@ -25,7 +25,7 @@ typedef struct GameNode {
 	struct GameNode *prev;	// previous node in the list
 }GameNode;
 
-GameNode *GameNode_create(); // basic node constructor and detailed constructor
+GameNode *GameNode_createEmpty(); // basic node constructor and detailed constructor
 GameNode *GameNode_create(int fd, char* username, char* correctWord, int numOfLives);
 
 // structure for whole list

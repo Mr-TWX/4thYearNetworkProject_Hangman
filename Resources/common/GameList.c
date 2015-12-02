@@ -2,7 +2,7 @@
 #include <string.h>
 
 //return pointer to new node in memory
-GameNode *GameNode_create()
+GameNode *GameNode_createEmpty()
 {
     return calloc(1, sizeof(GameNode));
 }
@@ -48,7 +48,7 @@ void GameList_clear(GameList *list)
     for(cur = list->first; cur != NULL; cur = cur->next) {
         cur->fd = 0;
         free(cur->username);
-        free(cur->part_Word);
+        free(cur->part_word);
         free(cur->correctWord);
         cur->numOfLives = 0;
     }
@@ -113,7 +113,7 @@ error:
     return;
 }
 
-void *GameList_removeHead(GameList *list)
+GameNode *GameList_removeHead(GameList *list)
 {
     GameNode *node = list->first;
     return node != NULL ? GameList_remove(list, node) : NULL;
@@ -123,19 +123,36 @@ GameNode *GameList_remove(GameList *list, GameNode *node)
 {
     GameNode *result = NULL;
 
-    check(list->first && list->last, "List is empty.");
-    check(node, "node can't be NULL");
+    if((list->first == NULL) && (list->last == NULL))
+        {
+            perror("List is empty.");
+            return NULL;
+        }
+
+    if(node == NULL)
+    {
+        perror("node can't be NULL");
+        return NULL;
+    }
 
     if(node == list->first && node == list->last) {
         list->first = NULL;
         list->last = NULL;
     } else if(node == list->first) {
         list->first = node->next;
-        check(list->first != NULL, "Invalid list, first found NULL.");
+        if(list->first == NULL)
+        {
+            perror("Invalid list, first found NULL.");
+            return NULL;
+        } 
         list->first->prev = NULL;
     } else if (node == list->last) {
         list->last = node->prev;
-        check(list->last != NULL, "Invalid list, next found NULL.");
+        if(list->last == NULL)
+        {
+            perror("Invalid list, next found NULL.");
+            return NULL;
+        } 
         list->last->next = NULL;
     } else {
         GameNode *after = node->next;
@@ -179,3 +196,22 @@ GameNode* GameList_searchGameNodeByUsername(GameList *list, char* username)
 error:
     return result;
 }
+
+/* UNcomment for testing
+int main(int argc, char *argv[])
+{
+    GameList* gList = GameList_create();
+    GameNode* gNode = GameNode_create(1, "Tom\0", "apple\0", 4);
+    GameList_push(gList, gNode);
+
+    gNode = GameNode_create(2, "John", "carrot", 3);
+    GameList_push(gList, gNode);
+
+    for(gNode = gList->first; gNode != NULL; gNode = gNode->next)
+    {
+        printf("fd %d username %s, word %s, lives %d\n", gNode->fd, gNode->username, gNode->correctWord, gNode->numOfLives);
+    }
+
+    return(0);
+}
+*?
