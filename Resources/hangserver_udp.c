@@ -1,5 +1,5 @@
  /* Network server for hangman game */
- /* File: hangserver.c */
+ /* File: hangserver_udp.c */
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -16,22 +16,22 @@ extern time_t time ();
 
 int maxlives = 12;
 char *word [] = {
-# include "words"
+#include "words"
 };
-# define NUM_OF_WORDS (sizeof (word) / sizeof (word [0]))
-//# define MAXLEN 80 /* Maximum size in the world of Any string */
-# define HANGMAN_UDP_PORT 1067
+#define NUM_OF_WORDS (sizeof (word) / sizeof (word [0]))
+#define MAXLEN 80 /* Maximum size in the world of Any string */
+#define HANGMAN_UDP_PORT 1067
 
-int main ()
- {
- 	int sock, fd;
- 	socklen_t client_len;
- 	struct sockaddr_in server, client;
+int main () {
+ 	int sock; // the UDP server socket file descriptor
+ 	struct sockaddr_in server, client; // server and client address structures
+ 	socklen_t client_len;	// length of client address structure
 
  	srand ((int) time ((long *) 0)); /* randomize the seed */
 
- 	sock = socket (AF_INET, SOCK_DGRAM, 0);//0 or IPPROTO_TCP
- 	if (sock <0) { //This error checking is the code Stevens wraps in his Socket Function etc
+ 	/* Initialize server socket*/
+ 	sock = socket (AF_INET, SOCK_DGRAM, 0);
+ 	if (sock <0) { 
  		perror ("creating datagram socket");
  		exit (1);
  	}
@@ -39,24 +39,22 @@ int main ()
  	server.sin_family = AF_INET;
  	server.sin_addr.s_addr = htonl(INADDR_ANY);
  	server.sin_port = htons(HANGMAN_UDP_PORT);
-
+ 	/* Bind the server socket to an available address and the defined port number*/
  	if (bind(sock, (struct sockaddr *) &server, sizeof(server)) <0) {
  		perror ("binding socket");
 	 	exit (2);
  	}
 
- 	// using UDP no need for listen
- 	//listen (sock, 5);
+ 	// initialise Hangman game components
+ 	GameList* gList = GameList_create(); // create a new empty list that holds all the gamestates
+ 	GameNode* gNode;	// GameNode pointer to work with one game state at the time
+ 	char buffer[MAXLEN]; // input buffer to hold messages sent by clients
+ 	int count;	// control variable to trak the amount of data received or sent
 
- 	// initialise game list
- 	GameList* gList = GameList_create();
- 	GameNode* gNode;
- 	char buffer[MAXLEN];
- 	int count;
-
- 	printf("Ready to Receive v2\n");
+ 	// All components initialised, start the infinite loop
+ 	printf("Ready to Receive v3\n");
  	while (1) {
-
+ 		// receive a message from any client, but store address of sender for reply
  		client_len = sizeof (client);
  		count = recvfrom(sock, buffer, MAXLEN, 0, (struct sockaddr*) &client, &client_len);
  		if (count == 0) {
@@ -66,150 +64,119 @@ int main ()
  		buffer[count] = '\0';
  		printf("(Received %s)\n", buffer);
 
- 		printf("out of IF\n");
-
  		// detect valid formatted string from client
- 		if(strstr(buffer, "_") != NULL)
- 		{
- 			char* username = strtok(buffer, "_");
- 			char* message = strtok(NULL, "_");
- 			printf("In IF with username %s and message %s \n", username, message);
- 			//look if client already connected
+ 		if(strstr(buffer, "_") != NULL) {
+ 			// extract username and guess from client message
+ 			char* username = strtok(buffer, "_"); // the username is always first
+ 			char* message = strtok(NULL, "_");	// message is after the '_' delimiter
+
+ 			//check if client already connected
  			gNode = GameList_searchGameNodeByUsername(gList, username);
- 			if(gNode == NULL)
- 			{
+
+ 			if(gNode == NULL) {
  				// client not in list, create new and add it to list
  				add_user(gList, username, sock, &client, client_len);
- 				//gNode = GameNode_create(GameList_count(gList), username, )
-
  			} else {
- 				//play_hangman(gNode, message, client_len, client_len);
- 				printf("client: %s already connected, sent: %s \n", username, message);
+ 				// client already connected, handle his guess
  				play_hangman(gNode, message, sock, &client, client_len);
+
+ 				// if game session ended then remove node from list
+ 				if(gNode->state != INCOMPLETE) {
+ 					if(GameList_remove(gList, gNode)) {
+ 						printf("removed %s\n", username);
+ 					} else {
+ 						printf("Error! Unable to remove: %s\n", username);
+ 					}
+ 				}
  			}
  		}
- 		//play_hangman (fd, fd);
- 		close (fd);
- 	}
- }
+	} // end of infinite loop
+}
 
- /* ---------------- Add_User () -----------------------*/
-add_user(GameList* gList, char* username, int sfd, struct sockaddr_in* client, socklen_t client_len)
-{
+/* ---------------- Add_User () -----------------------*/
+add_user(GameList* gList, char* username, int sfd, struct sockaddr_in* client, socklen_t client_len) {
 	// print state
 	printf("Adding new client %s\n", username);
 
 	// create a new GameNode and fill details
-	//char* whole_word, part_word[MAXLEN], outbuf[MAXLEN];
-	char* outbuf[MAXLEN], part_word[MAXLEN];
+	char* outbuf[MAXLEN];
 	int i, word_length;
 	char hostname[MAXLEN];
 
-	//whole_word = word[rand() % NUM_OF_WORDS];
-	//word_length = strlen(whole_word);
-
 	//create new GameNode and add it to the list
 	GameNode* gNode = GameNode_create(GameList_count(gList), username, word[rand() % NUM_OF_WORDS], maxlives);
-	word_length = strlen(gNode->correctWord);
 	printf("Word chosen is %s\n", gNode->correctWord);
 
 	/* no letters are guessed initially */
-	for (i = 0; i < word_length; i++)
-	{
+	word_length = strlen(gNode->correctWord);
+	for (i = 0; i < word_length; i++) {
  		gNode->part_word[i] = '-';
- 		printf("part_word at %d is %c \n", i, gNode->part_word[i]);
 	}
 	gNode->part_word[i] = '\0';
-
-	//gNode->part_word = part_word;
-	printf("par word %s\n", gNode->part_word);
-	//gNode->state = I;
 
 	// add node to list
 	GameList_push(gList, gNode);
 
-	// gNode set, send message back to client
+	// format message to send back to client
 	gethostname(hostname, MAXLEN);
 	sprintf(outbuf, "Playing hangman on host: %s \n%s %d \n", hostname, gNode->part_word, gNode->numOfLives);
-	//sprintf(outbuf, "Playing hangman:\n%s %d \n\0", gNode->part_word, gNode->numOfLives);
 	
-
 	printf("Sending %s\n", outbuf);
 
-	int count, buflen;
-	buflen = strlen(outbuf);
-	printf("buflen %d\n", buflen);
-
+	int count, buflen; // control variables for length of output buffer and sent characters
+	buflen = strlen(outbuf); // calculate how many characters to send
+	// send reply to client
 	count = sendto(sfd, outbuf, buflen, 0, (struct sockaddr*) client, client_len);
-	if(count == -1 )
+	if(count == -1)
 		perror("sendto fail");
-	printf("count %d\n", count);
 }	
 
- /* ---------------- Play_hangman () ---------------------*/
+ /* ---------------- Play_Hangman () ---------------------*/
+ play_hangman (GameNode* gNode, char* guess, int sfd, struct sockaddr_in* client, socklen_t client_len) {
+ 	printf("Client: %s already in list, sent: %s", username, message);
 
- //play_hangman (int in, int out)
- play_hangman (GameNode* gNode, char* guess, int sfd, struct sockaddr_in* client, socklen_t client_len)
- {
- 	char* outbuf [MAXLEN];
+ 	char* outbuf [MAXLEN]; // buffer for server response to client
+ 	int i, good_guess, word_length; // control variables
 
- 	//int lives = maxlives;
- 	//int game_state = INCOMPLETE;//I = Incomplete
- 	int i, good_guess, word_length;
- 	//char hostname[MAXLEN];
-
- 	/* Ggame is not over yet */
- 	if (gNode->state == INCOMPLETE)
- 	{
- 		/*
-		while (read (in, guess, MAXLEN) <0) {
- 			if (errno != EINTR)
- 				exit (4);
- 			printf ("re-read the startin \n");
- 			} // Re-start read () if interrupted by signal 
- 		*/
- 		//update lives and 
+ 	/* game is not over yet */
+ 	if (gNode->state == INCOMPLETE) {
+ 		//get lenght of word associated to GameNode gNode 
  		word_length = strlen(gNode->correctWord);
- 		printf("In PLAY HANGMAN with correct word %s\n", gNode->correctWord);
 
- 		good_guess = 0;
- 		for (i = 0; i <word_length; i++) {
+ 		good_guess = 0; // set it to FALSE
+ 		// loop through the correct word and check if client's guess appears in it
+ 		for (i = 0; i < word_length; i++) {
  			if (guess[0] == gNode->correctWord[i]) {
- 				good_guess = 1;
- 				gNode->part_word[i] = gNode->correctWord[i];
+ 				good_guess = 1; // found at least one match
+ 				gNode->part_word[i] = gNode->correctWord[i]; // reveal guessed characters
  			}
  		}
- 		printf("In PLAY HANGMAN with part word now: %s\n", gNode->part_word);
  		
- 		// decrement live
+ 		// decrement live if incorrect guess was made
  		if (! good_guess) 
  			gNode->numOfLives--;
 
- 		if (strcmp (gNode->correctWord, gNode->part_word) == 0)
- 		{
- 			gNode->state = WON; /* W ==> User Won */
+ 		if (strcmp (gNode->correctWord, gNode->part_word) == 0) {
+ 			// client guessed the entire word
+ 			gNode->state = WON; // client Won
  			sprintf(outbuf, "W_You Won, thank you for playing \n");
- 		} 
- 		else if (gNode->numOfLives == 0) 
- 		{
- 			gNode->state = LOST; /* L ==> User Lost */
+ 		} else if (gNode->numOfLives == 0) {
+ 			// client consumed all his lives
+ 			gNode->state = LOST; // client Lost
  			sprintf(outbuf, "L_You Lost, try again \nCorrect word: %s\n", gNode->correctWord);
- 			//strcpy (part_word, whole_word); /* User Show the word */
- 		}
- 		else
- 		{
+ 		} else {
+ 			// Game is stil going
+ 			// Format server respons with updated partial word and number of lives of the user
  			sprintf (outbuf, "I_%s %d \n", gNode->part_word, gNode->numOfLives);
  		}
 
- 		printf("Sending %s\n", outbuf);
+ 		printf("Sending %s", outbuf);
 
- 		int count, buflen;
-		buflen = strlen(outbuf);
-		printf("buflen %d\n", buflen);
- 		
+ 		int count, buflen; // control variables for length of output buffer and sent characters
+		buflen = strlen(outbuf); // calculate how many characters to send
+ 		// send reply to client
  		count = sendto(sfd, outbuf, buflen, 0, (struct sockaddr*) client, client_len);
 		if(count == -1 )
 			perror("sendto fail");
-		printf("count %d\n", count);
  	}
  }

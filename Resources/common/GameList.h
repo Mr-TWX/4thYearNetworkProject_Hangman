@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define MAXLEN 80 /* Maximum size in the world of Any string */
-
 typedef enum{INCOMPLETE, WON, LOST} GameState;
 
 struct GameNode;
@@ -51,7 +49,7 @@ GameNode* GameList_pop(GameList *list);	// remove last element
 void GameList_insertAtHead(GameList *list, GameNode *node);
 GameNode* GameList_removeHead(GameList *list);
 
-GameNode* GameList_remove(GameList *list, GameNode *node); // remove a particlar node
+int GameList_remove(GameList *list, GameNode *node); // remove a particlar node
 
 // SEARCH functions //
 // search a game node by looking at file descriptor

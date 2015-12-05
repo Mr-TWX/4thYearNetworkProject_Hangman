@@ -33,7 +33,7 @@ GameList *GameList_create()
     return calloc(1, sizeof(GameList));
 }
 
-// 
+// remove entire list from memory
 void GameList_destroy(GameList *list)
 {
     GameNode* cur = NULL;
@@ -48,6 +48,7 @@ void GameList_destroy(GameList *list)
     free(list);
 }
 
+// free list nodes from memory but keep them
 void GameList_clear(GameList *list)
 {
     GameNode* cur = NULL;
@@ -126,20 +127,20 @@ GameNode *GameList_removeHead(GameList *list)
     return node != NULL ? GameList_remove(list, node) : NULL;
 }
 
-GameNode *GameList_remove(GameList *list, GameNode *node)
+int GameList_remove(GameList *list, GameNode *node)
 {
-    GameNode *result = NULL;
+    int result = 0;
 
     if((list->first == NULL) && (list->last == NULL))
-        {
-            perror("List is empty.");
-            return NULL;
-        }
+    {
+        perror("List is empty.");
+        return result;
+    }
 
     if(node == NULL)
     {
         perror("node can't be NULL");
-        return NULL;
+        return result;
     }
 
     if(node == list->first && node == list->last) {
@@ -147,18 +148,16 @@ GameNode *GameList_remove(GameList *list, GameNode *node)
         list->last = NULL;
     } else if(node == list->first) {
         list->first = node->next;
-        if(list->first == NULL)
-        {
+        if(list->first == NULL) {
             perror("Invalid list, first found NULL.");
-            return NULL;
+            return result;
         } 
         list->first->prev = NULL;
     } else if (node == list->last) {
         list->last = node->prev;
-        if(list->last == NULL)
-        {
+        if(list->last == NULL) {
             perror("Invalid list, next found NULL.");
-            return NULL;
+            return result;
         } 
         list->last->next = NULL;
     } else {
@@ -169,7 +168,7 @@ GameNode *GameList_remove(GameList *list, GameNode *node)
     }
 
     list->count--;
-    //result = node->value;
+    result = 1;
     free(node);
 
 error:
@@ -197,10 +196,11 @@ GameNode* GameList_searchGameNodeByUsername(GameList *list, char* username)
     GameNode *result = NULL;
     for(result = list->first; result != NULL; result = result->next)
     {
-        printf("checking %s against %s\n", result->username, username);
+        //printf("checking %s against %s\n", result->username, username);
         if(strcmp(result->username, username) == 0)
             break;
     }
+
     if(result != NULL)
         if(result->username != NULL)
             printf("returning %d %s\n", result->fd, result->username);
