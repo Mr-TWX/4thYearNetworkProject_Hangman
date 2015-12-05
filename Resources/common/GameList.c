@@ -12,10 +12,17 @@ GameNode *GameNode_create(int fd, char* username, char* correctWord, int numOfLi
     GameNode* node = calloc(1, sizeof(GameNode));
 
     node->fd = fd;
-    node->username = username;
+    // allocate memory for username and initialize it to given string;
+    node->username = (char*) malloc(sizeof(char) * strlen(username));
+    strncpy(node->username, username, strlen(username) + 1);
+    node->username[strlen(username)] = '\0';
+    
     node->correctWord = correctWord;
+    // allocate memory for partial word based on correct word
+    node->part_word = (char*) malloc(sizeof(char) * strlen(correctWord));
+
     node->numOfLives = numOfLives;
-    node->state = I;
+    node->state = INCOMPLETE;
 
     return node;
 }
@@ -194,6 +201,9 @@ GameNode* GameList_searchGameNodeByUsername(GameList *list, char* username)
         if(strcmp(result->username, username) == 0)
             break;
     }
+    if(result != NULL)
+        if(result->username != NULL)
+            printf("returning %d %s\n", result->fd, result->username);
 error:
     return result;
 }

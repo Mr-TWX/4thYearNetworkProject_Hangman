@@ -6,7 +6,7 @@
 
 #define MAXLEN 80 /* Maximum size in the world of Any string */
 
-typedef enum{I, W, L} GameState;
+typedef enum{INCOMPLETE, WON, LOST} GameState;
 
 struct GameNode;
 
@@ -15,7 +15,8 @@ typedef struct GameNode {
 	// game related data
 	int fd;	// socket file descriptor for TCP connections
 	char* username;	// name of user playing this game
-	char* part_word[MAXLEN]; // portion of word guessed by the client
+	//char* part_word[MAXLEN];
+	char* part_word; // portion of word guessed by the client
 	char* correctWord;	// the correct word that needs to be guessed by the client
 	int numOfLives;		// number of lives left to the client
 	GameState state;	// the state of the game (either Incomplete, Win, Lost)

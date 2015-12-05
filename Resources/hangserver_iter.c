@@ -8,6 +8,7 @@
  #include <syslog.h>
  #include <signal.h>
  #include <errno.h>
+#include "./common/GameList.h"
 
  extern time_t time ();
 
@@ -16,8 +17,8 @@
  # include "words"
  };
  # define NUM_OF_WORDS (sizeof (word) / sizeof (word [0]))
- # define MAXLEN 80 /* Maximum size in the world of Any string */
- # define HANGMAN_TCP_PORT 1066
+ //# define MAXLEN 80 /* Maximum size in the world of Any string */
+ # define HANGMAN_UDP_PORT 1067
 
  main ()
  {
@@ -26,32 +27,40 @@
 
  	srand ((int) time ((long *) 0)); /* randomize the seed */
 
- 	sock = socket (AF_INET, SOCK_STREAM, 0);//0 or IPPROTO_TCP
+ 	sock = socket (AF_INET, SOCK_DGRAM, 0);//0 or IPPROTO_TCP
  	if (sock <0) { //This error checking is the code Stevens wraps in his Socket Function etc
- 		perror ("creating stream socket");
+ 		perror ("creating datagram socket");
  		exit (1);
  	}
 
  	server.sin_family = AF_INET;
  	server.sin_addr.s_addr = htonl(INADDR_ANY);
- 	server.sin_port = htons(HANGMAN_TCP_PORT);
+ 	server.sin_port = htons(HANGMAN_UDP_PORT);
 
  	if (bind(sock, (struct sockaddr *) & server, sizeof(server)) <0) {
  		perror ("binding socket");
 	 	exit (2);
  	}
 
- 	listen (sock, 5);
+ 	// using UDP no need for listen
+ 	//listen (sock, 5);
+
+ 	// initialise game list
+ 	GameList* gList = GameList_create();
+ 	GameNode* gNode;
+ 	char buffer[MAXLEN];
 
  	while (1) {
+
  		client_len = sizeof (client);
- 		if ((fd = accept (sock, (struct sockaddr *) &client, &client_len)) <0) {
+ 		if (recvfrom(iListenSocketFileDescriptor, buffer, MAXLEN, 0, (struct sockaddr*) &sClientAddress.sender, &sClientAddress.sendsize) == 0) {
  			perror ("accepting connection");
  			exit (3);
  		}
  		play_hangman (fd, fd);
  		close (fd);
  	}
+
  }
 
  /* ---------------- Play_hangman () ---------------------*/
