@@ -12,12 +12,20 @@
  #include "Practical.h"
  #include "Hangman.h"
 
+/* Signal Handler function that calls waitpid for all terminated children */
  	void
 sig_chld(int sigNumber)
 {
 	pid_t	pid;
 	int		stat;
 
+	/* first argument - allows to specify the process id to wait for
+	   -1 specifies to wait for the first child to terminate 
+	   Second argument - termination status
+	    Third argument - options argument - most commonly uses
+	    is WNOHANG which tells the kernal not to block if there 
+	    are no terminated children 
+	*/
 	while ( (pid = waitpid(-1, &stat, WNOHANG)) > 0) {
 		 printf("child %d terminated\n", pid); 
 	}
@@ -31,16 +39,11 @@ sig_chld(int sigNumber)
  	pid_t pid;
  	pidCount = 0;
 
-
-	 
-
- 	sock = socket (AF_INET, SOCK_STREAM, 0);//0 or IPPROTO_TCP
+	sock = socket (AF_INET, SOCK_STREAM, 0);//0 or IPPROTO_TCP
  	if (sock <0) { //This error checking is the code Stevens wraps in his Socket Function etc
  		perror ("creating stream socket");
  		exit (1);
  	}
-
-
 
  	server.sin_family = AF_INET;
  	server.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -53,6 +56,8 @@ sig_chld(int sigNumber)
 
  	listen (sock, 5);
 
+ 	/* Installs signal handler by calling signal and sending in the signal it wants to catch and 
+ 	   the handler function it wants to use to handle it */
  	signal(SIGCHLD, sig_chld);
 
  	for( ; ;) {
@@ -61,7 +66,7 @@ sig_chld(int sigNumber)
  		if ((fd = accept (sock, (struct sockaddr *) &client, &client_len)) < 0) {
  			if(errno == EINTR)
  			{
- 				continue;
+ 				continue;	/* Forces program to go back to for loop (Handles interrupts in accept) */
  			}
  			else
  			{
@@ -73,19 +78,21 @@ sig_chld(int sigNumber)
 		
 		pid = fork();
 		/*Fork Implementation*/
-		if (pid == 0){
+		/* If accept returns successfully the server calls fork which creates a new process known as the 
+			child. The child process services the client while the parent process listens for more connections */
+		if (pid == 0){	/* if pid is 0, fork is successful */
 		  printf("pid value after fork is %d \n", pid);
 		  srand ((int) time ((long *) 0));
-		  close(sock);
-		  play_hangman (fd, fd);
+		  close(sock);	/* Child closes listening socket */
+		  play_hangman (fd, fd); /* services the client with hangman game */ 
 		  exit(0);
  		}
- 		else if (pid < 0)
+ 		else if (pid < 0)  /*if pid < 0 then an error has occurred */
  		{
  			perror( "Fork Failed" );
  		}
 
- 		close(fd);
+ 		close(fd);	/* Parent closes the connected socket */
  		
 		}
  

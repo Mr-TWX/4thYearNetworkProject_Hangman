@@ -1,0 +1,15 @@
+Fork Server and client
+
+Compiling Server
+Use the command gcc -o hangserver_fork hangserver_iter.c Hangman.c Practical.h
+
+Running Server
+Use the command ./hangserver_fork
+
+Compiling the client
+Use the command gcc -o hangclient hangclient.c
+
+Running the client
+Use the command ./hangclient
+
+
