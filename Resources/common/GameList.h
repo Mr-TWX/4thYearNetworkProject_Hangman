@@ -11,10 +11,9 @@ struct GameNode;
 // structure for each node in the list
 typedef struct GameNode {
 	// game related data
-	int fd;	// socket file descriptor for TCP connections
-	char* username;	// name of user playing this game
-	//char* part_word[MAXLEN];
-	char* part_word; // portion of word guessed by the client
+	int fd;				// socket file descriptor for TCP connections
+	char* username;		// name of user playing this game
+	char* part_word; 	// portion of word guessed by the client
 	char* correctWord;	// the correct word that needs to be guessed by the client
 	int numOfLives;		// number of lives left to the client
 	GameState state;	// the state of the game (either Incomplete, Win, Lost)
@@ -51,10 +50,12 @@ GameNode* GameList_removeHead(GameList *list);
 
 int GameList_remove(GameList *list, GameNode *node); // remove a particlar node
 
-// SEARCH functions //
 // search a game node by looking at file descriptor
 GameNode* GameList_searchGameNodeByFd(GameList *list, int fd);
 // search a game node by looking at username
 GameNode* GameList_searchGameNodeByUsername(GameList *list, char* username);
+
+// loop through all nodes and print their values
+void GameList_print(GameList *list);
 
 #endif

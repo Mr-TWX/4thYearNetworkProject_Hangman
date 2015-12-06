@@ -52,7 +52,7 @@ int main () {
  	int count;	// control variable to trak the amount of data received or sent
 
  	// All components initialised, start the infinite loop
- 	printf("Ready to Receive v3\n");
+ 	printf("Ready to receive\n");
  	while (1) {
  		// receive a message from any client, but store address of sender for reply
  		client_len = sizeof (client);
@@ -90,6 +90,11 @@ int main () {
  				}
  			}
  		}
+
+ 		// print list status
+ 		printf("###### GameList status #######\n");
+ 		GameList_print(gList);
+ 		printf("##############################\n\n");
 	} // end of infinite loop
 }
 
@@ -133,7 +138,7 @@ add_user(GameList* gList, char* username, int sfd, struct sockaddr_in* client, s
 
  /* ---------------- Play_Hangman () ---------------------*/
  play_hangman (GameNode* gNode, char* guess, int sfd, struct sockaddr_in* client, socklen_t client_len) {
- 	printf("Client: %s already in list, sent: %s", username, message);
+ 	printf("Client: %s already in list, sent: %s\n", gNode->username, guess);
 
  	char* outbuf [MAXLEN]; // buffer for server response to client
  	int i, good_guess, word_length; // control variables

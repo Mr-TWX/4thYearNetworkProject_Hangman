@@ -201,11 +201,42 @@ GameNode* GameList_searchGameNodeByUsername(GameList *list, char* username)
             break;
     }
 
-    if(result != NULL)
-        if(result->username != NULL)
-            printf("returning %d %s\n", result->fd, result->username);
 error:
     return result;
+}
+
+void GameList_print(GameList *list)
+{
+    GameNode *node = NULL;
+    if(list->first != NULL){
+        for(node = list->first; node != NULL; node = node->next) {
+            //print nodes data one by one
+            if(node != 0) {
+                printf("GameNode #%d, ", node->fd);
+                printf("Username: %s, ", node->username);
+                printf("Guess: %s, ", node->part_word); 
+                printf("Word: %s, ", node->correctWord); 
+                printf("Lives: %d, ", node->numOfLives);
+                switch(node->state) {
+                    case INCOMPLETE:    
+                        printf("State: INCOMPLETE\n");
+                        break;
+                    case WON:
+                        printf("State: WON\n");
+                        break;
+                    case LOST:
+                        printf("State: LOST\n");
+                        break;
+                    default:
+                        printf("State: NULL\n");
+                        break;
+                }
+            }
+        }
+    }
+    else {
+        printf("GameList is empty\n");
+    }
 }
 
  /*//Uncomment for testing

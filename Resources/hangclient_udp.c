@@ -103,7 +103,7 @@
  		if (gameState == 'I') {
  			char userInput[LINESIZE]; // buffer for user input
  			count = read (0, userInput, LINESIZE);//read from STDIN
- 			userInput[count] = '\0';
+ 			userInput[count-1] = '\0';
 
  			// format and send message for server
  			// line format is "<username>_<message>"
